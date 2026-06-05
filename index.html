@@ -354,10 +354,33 @@ function tHTML(mid,idx,team,pick){
   if(!team)return`<div class="match-team tbd"><span class="mt-flag">🔄</span><span class="mt-name tbd-text">TBD</span></div>`;
   return`<div class="match-team ${isW?'winner':''}" onclick="pickW('${mid}',${idx})"><span class="mt-flag">${team.flag}</span><span class="mt-name">${team.name}</span>${isW?'<span class="mt-tick">✓</span>':''}</div>`;
 }
+function getDescendants(mid){
+  // Map each match to its children so we only clear picks downstream of a change
+  const children={};
+  const r32ids=R32.map((_,i)=>'r32-'+i);
+  let prev=r32ids;
+  [8,4,2,1].forEach((count,ri)=>{
+    const next=[];
+    for(let i=0;i<prev.length;i+=2){
+      const child=`rnd${ri+1}-m${i/2}`;
+      children[prev[i]]=[...(children[prev[i]]||[]),child];
+      children[prev[i+1]]=[...(children[prev[i+1]]||[]),child];
+      next.push(child);
+    }
+    prev=next;
+  });
+  const desc=new Set();
+  const queue=[mid];
+  while(queue.length){(children[queue.shift()]||[]).forEach(c=>{desc.add(c);queue.push(c);});}
+  return desc;
+}
 function pickW(mid,idx){
   const m=bracketMatches[mid];if(!m)return;
   const team=idx===0?m.team1:m.team2;if(!team)return;
-  if(bracketPicks[mid]!==idx)Object.keys(bracketPicks).forEach(k=>{if(k!==mid)delete bracketPicks[k];});
+  if(bracketPicks[mid]!==idx){
+    // Only clear picks that depend on this match's winner, not all picks
+    getDescendants(mid).forEach(d=>delete bracketPicks[d]);
+  }
   bracketPicks[mid]=idx;saveDraft();buildBracket();
 }
 

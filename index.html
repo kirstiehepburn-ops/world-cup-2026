@@ -648,7 +648,7 @@ function mkSel(key,label,opts){return`<div class="rr"><span class="rl">${label}<
 function renderResultsGrid(){
   document.getElementById('rg-main').innerHTML=[
     mkSel('champion','Champion',teamOpts()),mkSel('golden_boot','Golden Boot',gbOpts()),
-    ...[1,2,3].map(i=>mkSel(`wc_actual_${i}`,`Wildcard ${i}`,teamOpts())),
+    ...[1,2,3,4,5,6,7,8].map(i=>mkSel(`wc_actual_${i}`,`Wildcard ${i}`,teamOpts())),
   ].join('');
   document.getElementById('rg-rounds').innerHTML=[
     ...[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].map(i=>mkSel(`r32_winner_${i}`,`R32 M${i}`,teamOpts())),

@@ -39,12 +39,13 @@
   /* Instructions */
   .instructions { background:#0d1117; border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:6px; padding:1rem 1.1rem; margin-top:1rem; font-size:0.84rem; line-height:1.6; }
   .instructions h4 { color:var(--text); font-size:0.9rem; margin-bottom:0.6rem; }
-  .phase-schedule { display:flex; flex-direction:column; gap:0.4rem; margin-top:0.5rem; }
-  .phase-row { display:flex; align-items:baseline; gap:0.75rem; font-size:0.82rem; }
-  .phase-row .pr-label { color:var(--gold); font-weight:700; min-width:130px; }
-  .phase-row .pr-date { color:var(--muted); white-space:nowrap; min-width:110px; }
+  .phase-schedule { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem; }
+  .phase-row { display:grid; grid-template-columns:200px 1fr auto; align-items:start; gap:0.4rem 0.75rem; font-size:0.82rem; }
+  .phase-row .pr-label { color:var(--gold); font-weight:700; line-height:1.3; }
+  .phase-row .pr-middle { display:flex; flex-direction:column; gap:0.15rem; }
+  .phase-row .pr-date { color:var(--muted); }
   .phase-row .pr-desc { color:var(--text); }
-  .phase-row .pr-pts { color:var(--gold); font-size:0.75rem; margin-left:auto; white-space:nowrap; }
+  .phase-row .pr-pts { color:var(--gold); font-size:0.75rem; white-space:nowrap; text-align:right; }
   .phase-row.active-phase .pr-label { color:#4caf50; }
   .phase-row.locked-phase .pr-label { color:var(--muted); text-decoration:line-through; }
 
@@ -563,8 +564,10 @@ function updatePhaseSchedule(){
     const status=locked?'🔒 Closed':isNext?'🟢 Open':'⏳ Opens '+p.opens;
     return`<div class="phase-row ${cls}">
       <span class="pr-label">${p.label}</span>
-      <span class="pr-date" style="color:${locked?'var(--muted)':isNext?'#4caf50':'var(--muted)'}">${status} · closes ${fmtDate(p.deadline)}</span>
-      <span class="pr-desc">${p.desc}</span>
+      <div class="pr-middle">
+        <span class="pr-date" style="color:${locked?'var(--muted)':isNext?'#4caf50':'var(--muted)'}">${status} · closes ${fmtDate(p.deadline)}</span>
+        <span class="pr-desc">${p.desc}</span>
+      </div>
       <span class="pr-pts">${p.pts}</span>
     </div>`;
   }).join('');

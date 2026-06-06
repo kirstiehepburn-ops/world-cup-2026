@@ -39,15 +39,16 @@
   /* Instructions */
   .instructions { background:#0d1117; border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:6px; padding:1rem 1.1rem; margin-top:1rem; font-size:0.84rem; line-height:1.6; }
   .instructions h4 { color:var(--text); font-size:0.9rem; margin-bottom:0.6rem; }
-  .phase-schedule { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem; }
-  .phase-row { display:grid; grid-template-columns:200px 1fr auto; align-items:start; gap:0.4rem 0.75rem; font-size:0.82rem; }
-  .phase-row .pr-label { color:var(--gold); font-weight:700; line-height:1.3; }
-  .phase-row .pr-middle { display:flex; flex-direction:column; gap:0.15rem; }
-  .phase-row .pr-date { color:var(--muted); }
-  .phase-row .pr-desc { color:var(--text); }
-  .phase-row .pr-pts { color:var(--gold); font-size:0.75rem; white-space:nowrap; text-align:right; }
-  .phase-row.active-phase .pr-label { color:#4caf50; }
-  .phase-row.locked-phase .pr-label { color:var(--muted); text-decoration:line-through; }
+  .phase-table { width:100%; border-collapse:collapse; margin-top:0.5rem; font-size:0.82rem; }
+  .phase-table td { padding:0.3rem 0.5rem 0.3rem 0; vertical-align:top; }
+  .phase-table td:last-child { text-align:right; white-space:nowrap; padding-right:0; }
+  .pt-label { color:var(--gold); font-weight:700; white-space:nowrap; }
+  .pt-status { color:var(--muted); white-space:nowrap; }
+  .pt-desc { color:var(--text); }
+  .pt-pts { color:var(--gold); font-size:0.75rem; }
+  .active-phase .pt-label { color:#4caf50; }
+  .active-phase .pt-status { color:#4caf50; }
+  .locked-phase .pt-label { color:var(--muted); text-decoration:line-through; }
 
   /* Sections */
   .section { margin-top:1.25rem; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
@@ -193,7 +194,7 @@
   <div class="instructions">
     <h4>How to enter — predict each round before it starts</h4>
     <p style="color:var(--muted);font-size:0.8rem;margin-bottom:0.75rem">You can fill in all rounds now or come back before each deadline. Each round locks independently.</p>
-    <div class="phase-schedule" id="phase-schedule"></div>
+    <table class="phase-table" id="phase-schedule"></table>
     <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem">Enter your name and hit <strong style="color:var(--text)">Submit to League</strong> to save. You can resubmit any time to update unlocked picks.</p>
   </div>
 
@@ -350,7 +351,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 // ─── PHASES ──────────────────────────────────────────────────────────────────
 // All deadlines are 12pm BST = 11:00 UTC
 const PHASES=[
-  {id:'phase1', label:'Phase 1 — Groups, Wildcards, Golden Boot & Champion',
+  {id:'phase1', label:'Phase 1 — Groups & Picks',
    deadline:new Date('2026-06-11T11:00:00Z'), opens:'From now',
    desc:'Groups (1st & 2nd), 3 wildcards, golden boot, champion',
    pts:'up to 87pts'},
@@ -562,14 +563,12 @@ function updatePhaseSchedule(){
     const isNext=!locked&&(PHASES.find(x=>now<x.deadline)===p);
     const cls=locked?'locked-phase':isNext?'active-phase':'';
     const status=locked?'🔒 Closed':isNext?'🟢 Open':'⏳ Opens '+p.opens;
-    return`<div class="phase-row ${cls}">
-      <span class="pr-label">${p.label}</span>
-      <div class="pr-middle">
-        <span class="pr-date" style="color:${locked?'var(--muted)':isNext?'#4caf50':'var(--muted)'}">${status} · closes ${fmtDate(p.deadline)}</span>
-        <span class="pr-desc">${p.desc}</span>
-      </div>
-      <span class="pr-pts">${p.pts}</span>
-    </div>`;
+    return`<tr class="${cls}">
+      <td class="pt-label">${p.label}</td>
+      <td class="pt-status">${status} · closes ${fmtDate(p.deadline)}</td>
+      <td class="pt-desc">${p.desc}</td>
+      <td class="pt-pts">${p.pts}</td>
+    </tr>`;
   }).join('');
 }
 

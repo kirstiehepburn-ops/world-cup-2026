@@ -168,7 +168,7 @@
 
 <div class="tabs">
   <div class="tab active" onclick="showTab('picks')">My Picks</div>
-  <div class="tab" onclick="showTab('league')">🏆 League</div>
+  <div class="tab" onclick="showTab('league')">🏆 Leaderboard</div>
 </div>
 
 <!-- MY PICKS -->
@@ -176,7 +176,7 @@
 
   <div class="submit-bar">
     <input class="name-input" id="player-name" type="text" placeholder="Your name…" maxlength="30" oninput="saveDraft()">
-    <button class="btn btn-gold" id="submit-btn" onclick="submitEntry()">Submit to League</button>
+    <button class="btn btn-gold" id="submit-btn" onclick="submitEntry()">Submit</button>
     <div class="submit-status" id="submit-status"></div>
     <div class="progress-chips" id="progress-chips"></div>
   </div>
@@ -195,7 +195,7 @@
     <h4>How to enter — predict each round before it starts</h4>
     <p style="color:var(--muted);font-size:0.8rem;margin-bottom:0.75rem">You can fill in all rounds now or come back before each deadline. Each round locks independently.</p>
     <table class="phase-table" id="phase-schedule"></table>
-    <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem">Enter your name and hit <strong style="color:var(--text)">Submit to League</strong> to save. You can resubmit any time to update unlocked picks.</p>
+    <p style="color:var(--muted);font-size:0.78rem;margin-top:0.75rem">Enter your name and hit <strong style="color:var(--text)">Submit</strong> to save. You can resubmit any time to update unlocked picks.</p>
   </div>
 
   <!-- Phase 1: Groups, Wildcards, Golden Boot, Champion -->

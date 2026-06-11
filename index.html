@@ -308,7 +308,8 @@
   </div>
 
   <div class="results-section">
-    <h3>⚽ Enter actual results as the tournament progresses</h3>
+    <h3 style="cursor:pointer;user-select:none" onclick="unlockAdmin()">⚽ Enter actual results as the tournament progresses <span style="font-size:0.7rem;color:var(--muted)">(admin)</span></h3>
+    <div id="admin-body" style="display:none">
     <details class="rg" open>
       <summary>Champion, Golden Boot &amp; Wildcards</summary>
       <div class="rg-grid" id="rg-main"></div>
@@ -325,6 +326,7 @@
       <button class="btn btn-ghost btn-sm" id="save-results-btn" onclick="saveResults()">Save Results</button>
       <span id="results-saved" style="font-size:0.78rem;margin-left:0.5rem;"></span>
     </div>
+    </div><!-- end admin-body -->
   </div>
 
   <div class="scoring-key">
@@ -347,6 +349,16 @@
 const SUPABASE_URL='https://madlqkstetmgksunoutq.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZGxxa3N0ZXRtZ2tzdW5vdXRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NTgxODcsImV4cCI6MjA5NjIzNDE4N30.qbBCFftfr4yKd19lLj7hmmP1dgSPHqA7F2XsTc62u6k';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ─── ADMIN ───────────────────────────────────────────────────────────────────
+const ADMIN_PASS='shine2026';
+let adminUnlocked=false;
+function unlockAdmin(){
+  if(adminUnlocked){document.getElementById('admin-body').style.display='none';adminUnlocked=false;return;}
+  const pw=prompt('Admin password:');
+  if(pw===ADMIN_PASS){document.getElementById('admin-body').style.display='block';adminUnlocked=true;}
+  else if(pw!==null){alert('Incorrect password.');}
+}
 
 // ─── PHASES ──────────────────────────────────────────────────────────────────
 // All deadlines are 4pm BST = 11:00 UTC

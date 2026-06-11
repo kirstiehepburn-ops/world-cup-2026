@@ -349,30 +349,30 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 // ─── PHASES ──────────────────────────────────────────────────────────────────
-// All deadlines are 12pm BST = 11:00 UTC
+// All deadlines are 4pm BST = 11:00 UTC
 const PHASES=[
   {id:'phase1', label:'Phase 1 — Groups & Picks',
-   deadline:new Date('2026-06-11T11:00:00Z'), opens:'From now',
+   deadline:new Date('2026-06-11T15:00:00Z'), opens:'From now',
    desc:'Groups (1st & 2nd), 3 wildcards, golden boot, champion',
    pts:'up to 87pts'},
   {id:'r32', label:'Phase 2 — Round of 32',
-   deadline:new Date('2026-06-28T11:00:00Z'), opens:'27 June',
+   deadline:new Date('2026-06-28T15:00:00Z'), opens:'27 June',
    desc:'Pick 16 teams to win their R32 match',
    pts:'3pts each'},
   {id:'r16', label:'Phase 3 — Round of 16',
-   deadline:new Date('2026-07-04T11:00:00Z'), opens:'3 July',
+   deadline:new Date('2026-07-04T15:00:00Z'), opens:'3 July',
    desc:'Pick 8 teams to win their R16 match',
    pts:'4pts each'},
   {id:'qf', label:'Phase 4 — Quarter-Finals',
-   deadline:new Date('2026-07-09T11:00:00Z'), opens:'8 July',
+   deadline:new Date('2026-07-09T15:00:00Z'), opens:'8 July',
    desc:'Pick 4 teams to win their quarter-final',
    pts:'5pts each'},
   {id:'sf', label:'Phase 5 — Semi-Finals',
-   deadline:new Date('2026-07-14T11:00:00Z'), opens:'12 July',
+   deadline:new Date('2026-07-14T15:00:00Z'), opens:'12 July',
    desc:'Pick 2 teams to win their semi-final',
    pts:'6pts each'},
   {id:'final', label:'Phase 6 — The Final',
-   deadline:new Date('2026-07-19T11:00:00Z'), opens:'12 July',
+   deadline:new Date('2026-07-19T15:00:00Z'), opens:'12 July',
    desc:'Pick 1 team to win the final (bonus pick)',
    pts:'8pts'},
 ];
@@ -553,7 +553,7 @@ function updateUI(){
   updateProgressChips();
 }
 
-function fmtDate(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+', 12pm BST';}
+function fmtDate(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+', 4pm BST';}
 
 function updatePhaseSchedule(){
   const now=new Date();
@@ -581,7 +581,7 @@ function updateSectionLocks(){
     if(!sec)return;
     sec.classList.toggle('is-locked',locked);
     if(dl){dl.className='section-deadline '+(locked?'locked':'open');dl.textContent=locked?'🔒 Locked':'Closes '+fmtDate(p.deadline);}
-    if(lockEl)lockEl.innerHTML=locked?`<div class="locked-overlay">🔒 This phase closed at 12pm BST on ${p.deadline.toLocaleDateString('en-GB',{day:'numeric',month:'long'})}. Your picks are saved.</div>`:'';
+    if(lockEl)lockEl.innerHTML=locked?`<div class="locked-overlay">🔒 This phase closed at 4pm BST on ${p.deadline.toLocaleDateString('en-GB',{day:'numeric',month:'long'})}. Your picks are saved.</div>`:'';
   });
 }
 

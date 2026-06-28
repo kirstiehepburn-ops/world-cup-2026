@@ -354,6 +354,17 @@
       <button class="btn btn-ghost btn-sm" id="save-results-btn" onclick="saveResults()">Save Results</button>
       <span id="results-saved" style="font-size:0.78rem;margin-left:0.5rem;"></span>
     </div>
+
+    <details class="rg" style="margin-top:0.75rem">
+      <summary>Manual points adjustments</summary>
+      <div style="padding:0.6rem;font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem">Add a fixed points block to a player (e.g. to restore lost Phase 1 points). These add on top of their calculated score.</div>
+      <div id="manual-pts-list" style="padding:0 0.6rem 0.6rem"></div>
+      <div style="padding:0 0.6rem 0.6rem;display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+        <input id="adj-name" placeholder="Player name (exact)" style="background:#0d1117;border:1px solid var(--border);color:var(--text);padding:0.3rem 0.5rem;border-radius:4px;font-size:0.8rem;font-family:inherit;width:200px">
+        <input id="adj-pts" type="number" placeholder="Points" style="background:#0d1117;border:1px solid var(--border);color:var(--text);padding:0.3rem 0.5rem;border-radius:4px;font-size:0.8rem;font-family:inherit;width:80px">
+        <button class="btn btn-ghost btn-sm" onclick="addManualAdj()">Add</button>
+      </div>
+    </details>
     </div><!-- end admin-body -->
   </div>
 
@@ -795,6 +806,37 @@ async function saveResults(){
   setTimeout(()=>saved.textContent='',3000);
 }
 
+function renderManualAdj(){
+  const adj=actualResults.manual_pts||{};
+  const el=document.getElementById('manual-pts-list');
+  if(!el)return;
+  if(!Object.keys(adj).length){el.innerHTML='<div style="color:var(--muted);font-size:0.78rem;padding:0 0 0.4rem">No adjustments yet.</div>';return;}
+  el.innerHTML=Object.entries(adj).map(([name,pts])=>
+    `<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;font-size:0.82rem">
+      <span style="flex:1">${name}</span><span style="color:var(--gold);font-weight:700">+${pts}pts</span>
+      <button onclick="removeManualAdj('${name.replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem">✕</button>
+    </div>`
+  ).join('');
+}
+
+async function addManualAdj(){
+  const name=document.getElementById('adj-name').value.trim();
+  const pts=parseInt(document.getElementById('adj-pts').value);
+  if(!name||isNaN(pts))return;
+  actualResults.manual_pts=actualResults.manual_pts||{};
+  actualResults.manual_pts[name]=pts;
+  await sb.from('wc2026_results').upsert({id:1,results:actualResults},{onConflict:'id'});
+  document.getElementById('adj-name').value='';document.getElementById('adj-pts').value='';
+  renderManualAdj();fetchEntries().then(renderLeagueTable);
+}
+
+async function removeManualAdj(name){
+  if(!actualResults.manual_pts)return;
+  delete actualResults.manual_pts[name];
+  await sb.from('wc2026_results').upsert({id:1,results:actualResults},{onConflict:'id'});
+  renderManualAdj();fetchEntries().then(renderLeagueTable);
+}
+
 // ─── SCORING ─────────────────────────────────────────────────────────────────
 function scoreEntry(entry,results){
   let pts=0;const breakdown=[];
@@ -840,6 +882,10 @@ function scoreEntry(entry,results){
   // Final pick (Phase 6)
   if(bp.final&&results.final_winner&&bp.final===results.final_winner){pts+=8;breakdown.push('Final pick ⭐');}
 
+  // Manual adjustment
+  const adj=(results.manual_pts||{})[entry.name];
+  if(adj){pts+=adj;breakdown.push(`Admin adj: +${adj}pts`);}
+
   return{pts,breakdown};
 }
 
@@ -874,7 +920,7 @@ function renderLeagueTable(entries){
 
 async function loadLeague(){
   const[entries,results]=await Promise.all([fetchEntries(),fetchResults()]);
-  actualResults=results;renderResultsGrid();renderLeagueTable(entries);
+  actualResults=results;renderResultsGrid();renderManualAdj();renderLeagueTable(entries);
   document.getElementById('last-refresh').textContent='Updated '+new Date().toLocaleTimeString();
 }
 

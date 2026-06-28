@@ -260,7 +260,7 @@
     </div>
     <div class="section-body">
       <div id="lock-r32"></div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick <strong style="color:var(--text)">16 teams</strong> you think will win their Round of 32 match and advance to the Round of 16.</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick the winner of each match. Each match <strong style="color:var(--text)">locks 2 hours before kickoff</strong> — you can still update unlocked matches right up until they start.</p>
       <div class="picker-count">Selected: <strong id="r32-count">0</strong> / 16</div>
       <div class="r32-grid" id="r32-grid"></div>
     </div>
@@ -427,8 +427,8 @@ const PHASES=[
    desc:'Groups (1st & 2nd), 3 wildcards, golden boot, champion',
    pts:'up to 87pts'},
   {id:'r32', label:'Phase 2 — Round of 32',
-   deadline:new Date('2026-06-28T15:00:00Z'), opens:'27 June',
-   desc:'Pick 16 teams to win their R32 match',
+   deadline:new Date('2026-07-04T03:30:00Z'), opens:'27 June',
+   desc:'Pick winners — each match locks 2hrs before kickoff',
    pts:'3pts each'},
   {id:'r16', label:'Phase 3 — Round of 16',
    deadline:new Date('2026-07-04T15:00:00Z'), opens:'3 July',
@@ -600,22 +600,24 @@ function renderChampion(){
 }
 
 // ─── R32 FIXTURE PICKER ──────────────────────────────────────────────────────
+function isKOMatchLocked(utcStr){return new Date()>=new Date(new Date(utcStr).getTime()-2*60*60*1000);}
+
 function renderR32Fixtures(){
   const grid=document.getElementById('r32-grid');grid.innerHTML='';
   document.getElementById('r32-count').textContent=picks.r32.length;
-  const locked=isLocked('r32');
   R32_FIXTURES.forEach(f=>{
+    const matchLocked=isKOMatchLocked(f.utc);
     const bst=new Date(new Date(f.utc).getTime()+60*60000);
     const dateStr=bst.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+bst.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' BST';
     const hSel=picks.r32.includes(f.h),aSel=picks.r32.includes(f.a);
     const card=document.createElement('div');card.className='r32-card';
-    card.innerHTML=`<div class="r32-card-date">${dateStr}</div>
+    card.innerHTML=`<div class="r32-card-date">${matchLocked?'🔒 ':''} ${dateStr}</div>
       <div class="r32-teams">
-        <div class="r32-pick ${hSel?'selected':''} ${locked?'disabled':''}" data-team="${f.h}" data-other="${f.a}">${f.hf} <span style="overflow:hidden;text-overflow:ellipsis">${f.h}</span>${hSel?' ✓':''}</div>
+        <div class="r32-pick ${hSel?'selected':''} ${matchLocked?'disabled':''}" data-team="${f.h}" data-other="${f.a}">${f.hf} <span style="overflow:hidden;text-overflow:ellipsis">${f.h}</span>${hSel?' ✓':''}</div>
         <div class="r32-vs">v</div>
-        <div class="r32-pick away ${aSel?'selected':''} ${locked?'disabled':''}" data-team="${f.a}" data-other="${f.h}">${aSel?'✓ ':''}${f.af} <span style="overflow:hidden;text-overflow:ellipsis">${f.a}</span></div>
+        <div class="r32-pick away ${aSel?'selected':''} ${matchLocked?'disabled':''}" data-team="${f.a}" data-other="${f.h}">${aSel?'✓ ':''}${f.af} <span style="overflow:hidden;text-overflow:ellipsis">${f.a}</span></div>
       </div>`;
-    if(!locked){
+    if(!matchLocked){
       card.querySelectorAll('.r32-pick').forEach(btn=>btn.onclick=()=>{
         const team=btn.dataset.team,other=btn.dataset.other;
         const alreadySel=picks.r32.includes(team);

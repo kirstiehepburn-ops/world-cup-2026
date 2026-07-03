@@ -420,6 +420,18 @@ const R32_FIXTURES=[
   {m:16, utc:'2026-07-04T01:30Z', h:'Colombia',          hf:'🇨🇴', a:'Ghana',              af:'🇬🇭'},
 ];
 
+// ─── R16 FIXTURES ────────────────────────────────────────────────────────────
+const R16_FIXTURES=[
+  {m:1, utc:'2026-07-04T17:00Z', h:'Canada',        hf:'🇨🇦', a:'Morocco',      af:'🇲🇦'},
+  {m:2, utc:'2026-07-04T21:00Z', h:'Paraguay',      hf:'🇵🇾', a:'France',       af:'🇫🇷'},
+  {m:3, utc:'2026-07-05T20:00Z', h:'Brazil',        hf:'🇧🇷', a:'Norway',       af:'🇳🇴'},
+  {m:4, utc:'2026-07-06T00:00Z', h:'Mexico',        hf:'🇲🇽', a:'England',      af:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},
+  {m:5, utc:'2026-07-06T19:00Z', h:'Portugal',      hf:'🇵🇹', a:'Spain',        af:'🇪🇸'},
+  {m:6, utc:'2026-07-07T00:00Z', h:'United States', hf:'🇺🇸', a:'Belgium',      af:'🇧🇪'},
+  {m:7, utc:'2026-07-07T16:00Z', h:'TBD',           hf:'',    a:'TBD',          af:''},
+  {m:8, utc:'2026-07-07T20:00Z', h:'Switzerland',   hf:'🇨🇭', a:'TBD',          af:''},
+];
+
 // ─── PHASES ──────────────────────────────────────────────────────────────────
 // All deadlines are 4pm BST = 11:00 UTC
 const PHASES=[
@@ -635,11 +647,15 @@ function renderR32Fixtures(){
 function renderRoundPicker(phaseId,gridId,countId,maxPicks){
   const grid=document.getElementById(gridId);grid.innerHTML='';
   document.getElementById(countId).textContent=picks[phaseId].length;
+  // Per-match locking for R16: lock each team 2hrs before their match kicks off
+  const r16Lock={};
+  if(phaseId==='r16'){R16_FIXTURES.forEach(f=>{r16Lock[f.h]=f.utc;r16Lock[f.a]=f.utc;});}
   ALL_TEAMS.sort((a,b)=>a.name.localeCompare(b.name)).forEach(t=>{
     const isSel=picks[phaseId].includes(t.name),isDis=!isSel&&picks[phaseId].length>=maxPicks;
-    const item=document.createElement('div');item.className=`tp-item ${isSel?'selected':''} ${isDis?'disabled':''}`;
-    item.innerHTML=`<span>${t.flag}</span><span>${t.name}</span>${isSel?'<span style="color:var(--gold);margin-left:auto">✓</span>':''}`;
-    if(!isDis||isSel)item.onclick=()=>{
+    const matchLocked=phaseId==='r16'&&r16Lock[t.name]&&isKOMatchLocked(r16Lock[t.name]);
+    const item=document.createElement('div');item.className=`tp-item ${isSel?'selected':''} ${isDis||matchLocked?'disabled':''}`;
+    item.innerHTML=`<span>${t.flag}</span><span>${t.name}</span>${matchLocked?'<span style="margin-left:auto;opacity:0.5">🔒</span>':isSel?'<span style="color:var(--gold);margin-left:auto">✓</span>':''}`;
+    if((!isDis||isSel)&&!matchLocked)item.onclick=()=>{
       if(isLocked(phaseId))return;
       if(phaseId==='final'){picks.final=isSel?'':t.name;}
       else picks[phaseId]=isSel?picks[phaseId].filter(n=>n!==t.name):[...picks[phaseId],t.name];
@@ -787,7 +803,7 @@ function renderResultsGrid(){
   ].join('');
   document.getElementById('rg-rounds').innerHTML=[
     ...R32_FIXTURES.map(f=>mkSel(`r32_winner_${f.m}`,`${f.hf} ${f.h} v ${f.af} ${f.a}`,teamOpts())),
-    ...[1,2,3,4,5,6,7,8].map(i=>mkSel(`r16_winner_${i}`,`R16 M${i}`,teamOpts())),
+    ...R16_FIXTURES.map(f=>mkSel(`r16_winner_${f.m}`,f.h==='TBD'?`R16 M${f.m}`:f.hf+' '+f.h+' v '+f.af+' '+f.a,teamOpts())),
     ...[1,2,3,4].map(i=>mkSel(`qf_winner_${i}`,`QF M${i}`,teamOpts())),
     ...[1,2].map(i=>mkSel(`sf_winner_${i}`,`SF M${i}`,teamOpts())),
     mkSel('final_winner','Final Winner',teamOpts()),
@@ -1046,7 +1062,14 @@ const FIXTURES=[
   {utc:'2026-07-03T18:00Z',h:'Australia',a:'Egypt',g:'Round of 32'},
   {utc:'2026-07-03T22:00Z',h:'Argentina',a:'Cape Verde',g:'Round of 32'},
   {utc:'2026-07-04T01:30Z',h:'Colombia',a:'Ghana',g:'Round of 32'},
-  {utc:'2026-07-04T19:00Z',h:'R16 Match 1',a:'',g:'Round of 16'},
+  {utc:'2026-07-04T17:00Z',h:'Canada',a:'Morocco',g:'Round of 16'},
+  {utc:'2026-07-04T21:00Z',h:'Paraguay',a:'France',g:'Round of 16'},
+  {utc:'2026-07-05T20:00Z',h:'Brazil',a:'Norway',g:'Round of 16'},
+  {utc:'2026-07-06T00:00Z',h:'Mexico',a:'England',g:'Round of 16'},
+  {utc:'2026-07-06T19:00Z',h:'Portugal',a:'Spain',g:'Round of 16'},
+  {utc:'2026-07-07T00:00Z',h:'United States',a:'Belgium',g:'Round of 16'},
+  {utc:'2026-07-07T16:00Z',h:'R16 M7',a:'TBD',g:'Round of 16'},
+  {utc:'2026-07-07T20:00Z',h:'Switzerland',a:'TBD',g:'Round of 16'},
   {utc:'2026-07-09T19:00Z',h:'Quarter-Final 1',a:'',g:'Quarter-Finals'},
   {utc:'2026-07-14T19:00Z',h:'Semi-Final 1',a:'',g:'Semi-Finals'},
   {utc:'2026-07-15T19:00Z',h:'Semi-Final 2',a:'',g:'Semi-Finals'},

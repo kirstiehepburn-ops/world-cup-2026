@@ -276,9 +276,9 @@
     </div>
     <div class="section-body">
       <div id="lock-r16"></div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick <strong style="color:var(--text)">8 teams</strong> you think will win their Round of 16 match and reach the quarter-finals.</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick the winner of each match. Each match <strong style="color:var(--text)">locks 1 hour before kickoff</strong> — you can still update unlocked matches right up until they start.</p>
       <div class="picker-count">Selected: <strong id="r16-count">0</strong> / 8</div>
-      <div class="team-picker-grid" id="r16-grid"></div>
+      <div class="r32-grid" id="r16-grid"></div>
     </div>
   </div>
 
@@ -444,8 +444,8 @@ const PHASES=[
    desc:'Pick winners — each match locks 2hrs before kickoff',
    pts:'3pts each'},
   {id:'r16', label:'Phase 3 — Round of 16',
-   deadline:new Date('2026-07-04T15:00:00Z'), opens:'3 July',
-   desc:'Pick 8 teams to win their R16 match',
+   deadline:new Date('2026-07-07T21:00:00Z'), opens:'3 July',
+   desc:'Pick winners — each match locks 1hr before kickoff',
    pts:'4pts each'},
   {id:'qf', label:'Phase 4 — Quarter-Finals',
    deadline:new Date('2026-07-09T15:00:00Z'), opens:'8 July',
@@ -614,6 +614,7 @@ function renderChampion(){
 
 // ─── R32 FIXTURE PICKER ──────────────────────────────────────────────────────
 function isKOMatchLocked(utcStr){return new Date()>=new Date(new Date(utcStr).getTime()-2*60*60*1000);}
+function isR16MatchLocked(utcStr){return new Date()>=new Date(new Date(utcStr).getTime()-1*60*60*1000);}
 
 function renderR32Fixtures(){
   const grid=document.getElementById('r32-grid');grid.innerHTML='';
@@ -643,19 +644,46 @@ function renderR32Fixtures(){
   });
 }
 
+// ─── R16 FIXTURE PICKER ──────────────────────────────────────────────────────
+function renderR16Fixtures(){
+  const grid=document.getElementById('r16-grid');grid.innerHTML='';
+  document.getElementById('r16-count').textContent=picks.r16.length;
+  R16_FIXTURES.forEach(f=>{
+    const matchLocked=isR16MatchLocked(f.utc);
+    const bst=new Date(new Date(f.utc).getTime()+60*60000);
+    const dateStr=bst.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+bst.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' BST';
+    const hSel=picks.r16.includes(f.h),aSel=picks.r16.includes(f.a);
+    const hTbd=f.h==='TBD',aTbd=f.a==='TBD';
+    const card=document.createElement('div');card.className='r32-card';
+    card.innerHTML=`<div class="r32-card-date">${matchLocked?'🔒 ':''} ${dateStr}</div>
+      <div class="r32-teams">
+        <div class="r32-pick ${hSel?'selected':''} ${matchLocked||hTbd?'disabled':''}" data-team="${f.h}" data-other="${f.a}">${f.hf} <span style="overflow:hidden;text-overflow:ellipsis">${f.h}</span>${hSel?' ✓':''}</div>
+        <div class="r32-vs">v</div>
+        <div class="r32-pick away ${aSel?'selected':''} ${matchLocked||aTbd?'disabled':''}" data-team="${f.a}" data-other="${f.h}">${aSel?'✓ ':''}${f.af} <span style="overflow:hidden;text-overflow:ellipsis">${f.a}</span></div>
+      </div>`;
+    if(!matchLocked){
+      card.querySelectorAll('.r32-pick').forEach(btn=>btn.onclick=()=>{
+        const team=btn.dataset.team,other=btn.dataset.other;
+        if(team==='TBD')return;
+        const alreadySel=picks.r16.includes(team);
+        picks.r16=picks.r16.filter(n=>n!==team&&n!==other);
+        if(!alreadySel)picks.r16.push(team);
+        saveDraft();renderR16Fixtures();
+      });
+    }
+    grid.appendChild(card);
+  });
+}
+
 // ─── ROUND PICKERS ───────────────────────────────────────────────────────────
 function renderRoundPicker(phaseId,gridId,countId,maxPicks){
   const grid=document.getElementById(gridId);grid.innerHTML='';
   document.getElementById(countId).textContent=picks[phaseId].length;
-  // Per-match locking for R16: lock each team 2hrs before their match kicks off
-  const r16Lock={};
-  if(phaseId==='r16'){R16_FIXTURES.forEach(f=>{r16Lock[f.h]=f.utc;r16Lock[f.a]=f.utc;});}
   ALL_TEAMS.sort((a,b)=>a.name.localeCompare(b.name)).forEach(t=>{
     const isSel=picks[phaseId].includes(t.name),isDis=!isSel&&picks[phaseId].length>=maxPicks;
-    const matchLocked=phaseId==='r16'&&r16Lock[t.name]&&isKOMatchLocked(r16Lock[t.name]);
-    const item=document.createElement('div');item.className=`tp-item ${isSel?'selected':''} ${isDis||matchLocked?'disabled':''}`;
-    item.innerHTML=`<span>${t.flag}</span><span>${t.name}</span>${matchLocked?'<span style="margin-left:auto;opacity:0.5">🔒</span>':isSel?'<span style="color:var(--gold);margin-left:auto">✓</span>':''}`;
-    if((!isDis||isSel)&&!matchLocked)item.onclick=()=>{
+    const item=document.createElement('div');item.className=`tp-item ${isSel?'selected':''} ${isDis?'disabled':''}`;
+    item.innerHTML=`<span>${t.flag}</span><span>${t.name}</span>${isSel?'<span style="color:var(--gold);margin-left:auto">✓</span>':''}`;
+    if(!isDis||isSel)item.onclick=()=>{
       if(isLocked(phaseId))return;
       if(phaseId==='final'){picks.final=isSel?'':t.name;}
       else picks[phaseId]=isSel?picks[phaseId].filter(n=>n!==t.name):[...picks[phaseId],t.name];
@@ -758,7 +786,7 @@ async function loadPicksByName(){
   saveDraft();
   renderGroups();renderWildcards();renderGoldenBoot();renderChampion();
   renderR32Fixtures();
-  renderRoundPicker('r16','r16-grid','r16-count',8);
+  renderR16Fixtures();
   renderRoundPicker('qf','qf-grid','qf-count',4);
   renderRoundPicker('sf','sf-grid','sf-count',2);
   renderRoundPicker('final','final-grid','final-count',1);
@@ -1125,7 +1153,7 @@ function renderNextMatches(){
 // ─── INIT ────────────────────────────────────────────────────────────────────
 renderGroups();renderWildcards();renderGoldenBoot();renderChampion();
 renderR32Fixtures();
-renderRoundPicker('r16','r16-grid','r16-count',8);
+renderR16Fixtures();
 renderRoundPicker('qf','qf-grid','qf-count',4);
 renderRoundPicker('sf','sf-grid','sf-count',2);
 renderRoundPicker('final','final-grid','final-count',1);

@@ -1206,9 +1206,9 @@ function renderNextMatches(){
 renderGroups();renderWildcards();renderGoldenBoot();renderChampion();
 renderR32Fixtures();
 renderR16Fixtures();
-renderRoundPicker('qf','qf-grid','qf-count',4);
-renderRoundPicker('sf','sf-grid','sf-count',2);
-renderRoundPicker('final','final-grid','final-count',1);
+renderQFFixtures();
+renderSFFixtures();
+renderFinalFixture();
 updateUI();setupRealtime();
 updateCountdown();setInterval(updateCountdown,1000);
 renderNextMatches();setInterval(renderNextMatches,60000);

@@ -291,9 +291,9 @@
     </div>
     <div class="section-body">
       <div id="lock-qf"></div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick <strong style="color:var(--text)">4 teams</strong> you think will win their quarter-final and reach the semis.</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick the winner of each match. Each match <strong style="color:var(--text)">locks 1 hour before kickoff</strong>.</p>
       <div class="picker-count">Selected: <strong id="qf-count">0</strong> / 4</div>
-      <div class="team-picker-grid" id="qf-grid"></div>
+      <div class="r32-grid" id="qf-grid"></div>
     </div>
   </div>
 
@@ -306,9 +306,9 @@
     </div>
     <div class="section-body">
       <div id="lock-sf"></div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick <strong style="color:var(--text)">2 teams</strong> you think will win their semi-final and reach the final.</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick the winner of each match. Each match <strong style="color:var(--text)">locks 1 hour before kickoff</strong>.</p>
       <div class="picker-count">Selected: <strong id="sf-count">0</strong> / 2</div>
-      <div class="team-picker-grid" id="sf-grid"></div>
+      <div class="r32-grid" id="sf-grid"></div>
     </div>
   </div>
 
@@ -321,9 +321,9 @@
     </div>
     <div class="section-body">
       <div id="lock-final"></div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick <strong style="color:var(--text)">1 team</strong> to lift the trophy. Bonus pick — separate from your Phase 1 champion.</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Pick the winner of the final. <strong style="color:var(--text)">Locks 1 hour before kickoff.</strong> Bonus pick — separate from your Phase 1 champion.</p>
       <div class="picker-count">Selected: <strong id="final-count">0</strong> / 1</div>
-      <div class="team-picker-grid" id="final-grid"></div>
+      <div class="r32-grid" id="final-grid"></div>
     </div>
   </div>
 
@@ -432,6 +432,19 @@ const R16_FIXTURES=[
   {m:8, utc:'2026-07-07T20:00Z', h:'Switzerland',   hf:'🇨🇭', a:'Colombia',      af:'🇨🇴'},
 ];
 
+// ─── QF / SF / FINAL FIXTURES ────────────────────────────────────────────────
+const QF_FIXTURES=[
+  {m:1, utc:'2026-07-09T20:00Z', h:'TBD', hf:'', a:'TBD', af:''},
+  {m:2, utc:'2026-07-10T19:00Z', h:'TBD', hf:'', a:'TBD', af:''},
+  {m:3, utc:'2026-07-11T21:00Z', h:'TBD', hf:'', a:'TBD', af:''},
+  {m:4, utc:'2026-07-12T01:00Z', h:'TBD', hf:'', a:'TBD', af:''},
+];
+const SF_FIXTURES=[
+  {m:1, utc:'2026-07-14T19:00Z', h:'TBD', hf:'', a:'TBD', af:''},
+  {m:2, utc:'2026-07-15T19:00Z', h:'TBD', hf:'', a:'TBD', af:''},
+];
+const FINAL_FIXTURE={m:1, utc:'2026-07-19T19:00Z', h:'TBD', hf:'', a:'TBD', af:''};
+
 // ─── PHASES ──────────────────────────────────────────────────────────────────
 // All deadlines are 4pm BST = 11:00 UTC
 const PHASES=[
@@ -448,16 +461,16 @@ const PHASES=[
    desc:'Pick winners — each match locks 1hr before kickoff',
    pts:'4pts each'},
   {id:'qf', label:'Phase 4 — Quarter-Finals',
-   deadline:new Date('2026-07-09T15:00:00Z'), opens:'8 July',
-   desc:'Pick 4 teams to win their quarter-final',
+   deadline:new Date('2026-07-12T02:00:00Z'), opens:'8 July',
+   desc:'Pick winners — each match locks 1hr before kickoff',
    pts:'5pts each'},
   {id:'sf', label:'Phase 5 — Semi-Finals',
-   deadline:new Date('2026-07-14T15:00:00Z'), opens:'12 July',
-   desc:'Pick 2 teams to win their semi-final',
+   deadline:new Date('2026-07-15T20:00:00Z'), opens:'12 July',
+   desc:'Pick winners — each match locks 1hr before kickoff',
    pts:'6pts each'},
   {id:'final', label:'Phase 6 — The Final',
-   deadline:new Date('2026-07-19T15:00:00Z'), opens:'12 July',
-   desc:'Pick 1 team to win the final (bonus pick)',
+   deadline:new Date('2026-07-19T20:00:00Z'), opens:'18 July',
+   desc:'Pick 1 team to win the final — locks 1hr before kickoff',
    pts:'8pts'},
 ];
 
@@ -675,6 +688,42 @@ function renderR16Fixtures(){
   });
 }
 
+// ─── QF / SF / FINAL FIXTURE PICKERS ─────────────────────────────────────────
+function renderKOFixtures(fixtures,phaseId,gridId,countId){
+  const grid=document.getElementById(gridId);grid.innerHTML='';
+  const isFinal=phaseId==='final';
+  const count=isFinal?(picks.final?1:0):picks[phaseId].length;
+  document.getElementById(countId).textContent=count;
+  fixtures.forEach(f=>{
+    const matchLocked=isR16MatchLocked(f.utc);
+    const bst=new Date(new Date(f.utc).getTime()+60*60000);
+    const dateStr=bst.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+bst.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' BST';
+    const hSel=isFinal?picks.final===f.h:picks[phaseId].includes(f.h);
+    const aSel=isFinal?picks.final===f.a:picks[phaseId].includes(f.a);
+    const hTbd=f.h==='TBD',aTbd=f.a==='TBD';
+    const card=document.createElement('div');card.className='r32-card';
+    card.innerHTML=`<div class="r32-card-date">${matchLocked?'🔒 ':''} ${dateStr}</div>
+      <div class="r32-teams">
+        <div class="r32-pick ${hSel?'selected':''} ${matchLocked||hTbd?'disabled':''}" data-team="${f.h}" data-other="${f.a}">${f.hf} <span style="overflow:hidden;text-overflow:ellipsis">${f.h}</span>${hSel?' ✓':''}</div>
+        <div class="r32-vs">v</div>
+        <div class="r32-pick away ${aSel?'selected':''} ${matchLocked||aTbd?'disabled':''}" data-team="${f.a}" data-other="${f.h}">${aSel?'✓ ':''}${f.af} <span style="overflow:hidden;text-overflow:ellipsis">${f.a}</span></div>
+      </div>`;
+    if(!matchLocked){
+      card.querySelectorAll('.r32-pick').forEach(btn=>btn.onclick=()=>{
+        const team=btn.dataset.team,other=btn.dataset.other;
+        if(team==='TBD')return;
+        if(isFinal){picks.final=picks.final===team?'':team;}
+        else{const alreadySel=picks[phaseId].includes(team);picks[phaseId]=picks[phaseId].filter(n=>n!==team&&n!==other);if(!alreadySel)picks[phaseId].push(team);}
+        saveDraft();renderKOFixtures(fixtures,phaseId,gridId,countId);
+      });
+    }
+    grid.appendChild(card);
+  });
+}
+function renderQFFixtures(){renderKOFixtures(QF_FIXTURES,'qf','qf-grid','qf-count');}
+function renderSFFixtures(){renderKOFixtures(SF_FIXTURES,'sf','sf-grid','sf-count');}
+function renderFinalFixture(){renderKOFixtures([FINAL_FIXTURE],'final','final-grid','final-count');}
+
 // ─── ROUND PICKERS ───────────────────────────────────────────────────────────
 function renderRoundPicker(phaseId,gridId,countId,maxPicks){
   const grid=document.getElementById(gridId);grid.innerHTML='';
@@ -787,9 +836,9 @@ async function loadPicksByName(){
   renderGroups();renderWildcards();renderGoldenBoot();renderChampion();
   renderR32Fixtures();
   renderR16Fixtures();
-  renderRoundPicker('qf','qf-grid','qf-count',4);
-  renderRoundPicker('sf','sf-grid','sf-count',2);
-  renderRoundPicker('final','final-grid','final-count',1);
+  renderQFFixtures();
+  renderSFFixtures();
+  renderFinalFixture();
   updateProgressChips();
   status.className='submit-status ok';
   status.textContent=`✓ Picks loaded for ${name} — make any changes and resubmit.`;
@@ -832,8 +881,8 @@ function renderResultsGrid(){
   document.getElementById('rg-rounds').innerHTML=[
     ...R32_FIXTURES.map(f=>mkSel(`r32_winner_${f.m}`,`${f.hf} ${f.h} v ${f.af} ${f.a}`,teamOpts())),
     ...R16_FIXTURES.map(f=>mkSel(`r16_winner_${f.m}`,f.h==='TBD'?`R16 M${f.m}`:f.hf+' '+f.h+' v '+f.af+' '+f.a,teamOpts())),
-    ...[1,2,3,4].map(i=>mkSel(`qf_winner_${i}`,`QF M${i}`,teamOpts())),
-    ...[1,2].map(i=>mkSel(`sf_winner_${i}`,`SF M${i}`,teamOpts())),
+    ...QF_FIXTURES.map(f=>mkSel(`qf_winner_${f.m}`,f.h==='TBD'?`QF M${f.m}`:f.hf+' '+f.h+' v '+f.af+' '+f.a,teamOpts())),
+    ...SF_FIXTURES.map(f=>mkSel(`sf_winner_${f.m}`,f.h==='TBD'?`SF M${f.m}`:f.hf+' '+f.h+' v '+f.af+' '+f.a,teamOpts())),
     mkSel('final_winner','Final Winner',teamOpts()),
   ].join('');
   document.getElementById('rg-groups').innerHTML=Object.keys(GROUPS).flatMap(g=>[
@@ -1098,10 +1147,13 @@ const FIXTURES=[
   {utc:'2026-07-07T00:00Z',h:'United States',a:'Belgium',g:'Round of 16'},
   {utc:'2026-07-07T16:00Z',h:'Argentina',a:'Egypt',g:'Round of 16'},
   {utc:'2026-07-07T20:00Z',h:'Switzerland',a:'Colombia',g:'Round of 16'},
-  {utc:'2026-07-09T19:00Z',h:'Quarter-Final 1',a:'',g:'Quarter-Finals'},
-  {utc:'2026-07-14T19:00Z',h:'Semi-Final 1',a:'',g:'Semi-Finals'},
-  {utc:'2026-07-15T19:00Z',h:'Semi-Final 2',a:'',g:'Semi-Finals'},
-  {utc:'2026-07-19T19:00Z',h:'World Cup Final',a:'',g:'Final'},
+  {utc:'2026-07-09T20:00Z',h:'QF 1',a:'TBD',g:'Quarter-Finals'},
+  {utc:'2026-07-10T19:00Z',h:'QF 2',a:'TBD',g:'Quarter-Finals'},
+  {utc:'2026-07-11T21:00Z',h:'QF 3',a:'TBD',g:'Quarter-Finals'},
+  {utc:'2026-07-12T01:00Z',h:'QF 4',a:'TBD',g:'Quarter-Finals'},
+  {utc:'2026-07-14T19:00Z',h:'Semi-Final 1',a:'TBD',g:'Semi-Finals'},
+  {utc:'2026-07-15T19:00Z',h:'Semi-Final 2',a:'TBD',g:'Semi-Finals'},
+  {utc:'2026-07-19T19:00Z',h:'World Cup Final',a:'TBD',g:'Final'},
 ];
 
 let nmOpen=true;

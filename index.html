@@ -853,12 +853,23 @@ async function submitEntry(){
   if(!name){status.className='submit-status err';status.textContent='Please enter your name.';return;}
   if(!picks.champion&&!isLocked('phase1')){status.className='submit-status err';status.textContent='Please pick a tournament winner before submitting.';return;}
   btn.disabled=true;status.className='submit-status loading';status.innerHTML='<span class="spinner"></span>Submitting…';
+  // Phase 1 is locked — always preserve existing DB values to prevent new-device blank overwrites
+  let positions=picks.groups,wildcards=picks.wildcards,champion=picks.champion,goldenBoot=picks.golden_boot;
+  if(isLocked('phase1')){
+    const{data:ex}=await sb.from('wc2026_entries').select('bracket_picks,positions,wildcards').eq('name',name).maybeSingle();
+    if(ex){
+      positions=ex.positions||positions;
+      wildcards=ex.wildcards||wildcards;
+      const bp=ex.bracket_picks||{};
+      champion=bp.champion||champion;
+      goldenBoot=bp.golden_boot||goldenBoot;
+      picks.champion=champion;picks.golden_boot=goldenBoot;
+    }
+  }
   const payload={
-    name,
-    positions:picks.groups,
-    wildcards:picks.wildcards,
+    name,positions,wildcards,
     bracket_picks:{
-      champion:picks.champion,golden_boot:picks.golden_boot,
+      champion,golden_boot:goldenBoot,
       r32:picks.r32,r16:picks.r16,qf:picks.qf,sf:picks.sf,final:picks.final
     }
   };
